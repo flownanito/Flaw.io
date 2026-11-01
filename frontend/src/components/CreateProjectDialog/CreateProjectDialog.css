@@ -1,0 +1,115 @@
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  overflow-y: auto;
+  place-items: center;
+  padding: 24px;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.dialog-backdrop::backdrop {
+  background: rgb(0 0 0 / 72%);
+  backdrop-filter: blur(5px);
+}
+
+.project-dialog {
+  width: min(100%, 480px);
+  padding: 23px;
+  border: 1px solid var(--line-strong);
+  outline: none;
+  background: #151812;
+  box-shadow: 12px 12px 0 rgb(196 244 58 / 9%);
+  animation: dialog-arrive 180ms ease-out both;
+}
+
+@keyframes dialog-arrive {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dialog-heading h2 {
+  margin: 12px 0 0;
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: -1px;
+}
+
+.dialog-intro {
+  max-width: 370px;
+  margin: 11px 0 20px;
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.project-dialog form {
+  display: grid;
+  gap: 8px;
+}
+
+.project-dialog label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  color: var(--text-soft);
+  font-size: 11px;
+}
+
+.project-dialog label > span:first-child:not(.optional-label) {
+  color: var(--acid);
+}
+
+.optional-label {
+  margin-left: auto;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.project-dialog textarea {
+  resize: vertical;
+  min-height: 70px;
+  font-family: var(--font-body);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 13px;
+}
+
+@media (max-width: 480px) {
+  .dialog-backdrop {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .project-dialog {
+    padding: 19px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-dialog {
+    animation: none;
+  }
+}

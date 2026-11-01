@@ -1,0 +1,66 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Flaw: API",
+      "type": "process",
+      "command": "mvn",
+      "args": [
+        "spring-boot:run",
+        "-Dspring-boot.run.profiles=dev"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "flaw-api",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*Starting FlawApplication.*",
+          "endsPattern": ".*Started FlawApplication in .*"
+        }
+      }
+    },
+    {
+      "label": "Flaw: frontend",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "dev"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "flaw-frontend",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*> flaw-frontend@.* dev",
+          "endsPattern": ".*Local:.*"
+        }
+      }
+    },
+    {
+      "label": "Iniciar Flaw (frontend + API)",
+      "dependsOn": [
+        "Flaw: API",
+        "Flaw: frontend"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

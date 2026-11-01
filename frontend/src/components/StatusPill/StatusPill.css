@@ -1,0 +1,49 @@
+.status-pill {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  color: var(--text-soft);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.status-pill::before {
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+  content: '';
+}
+
+.status-critical {
+  border-color: rgb(255 111 97 / 30%);
+  background: rgb(255 111 97 / 8%);
+  color: var(--coral);
+}
+
+.status-high {
+  border-color: rgb(255 180 84 / 30%);
+  background: rgb(255 180 84 / 7%);
+  color: var(--amber);
+}
+
+.status-medium {
+  border-color: rgb(103 180 255 / 28%);
+  background: rgb(103 180 255 / 7%);
+  color: var(--blue);
+}
+
+.status-low {
+  border-color: rgb(196 244 58 / 24%);
+  background: rgb(196 244 58 / 6%);
+  color: var(--acid);
+}
+
+.status-demo {
+  border-color: rgb(255 180 84 / 30%);
+  color: var(--amber);
+}
