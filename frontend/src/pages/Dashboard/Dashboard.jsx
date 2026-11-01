@@ -9,7 +9,6 @@ export default function Dashboard({ data, onNavigate }) {
   const criticalCount = vulnerabilities.filter((item) => item.severity === 'CRITICAL').length;
   const latestAlerts = [...alerts].slice(0, 4);
   const featuredProject = projects[0];
-  const hasDemoData = vulnerabilities.some((item) => item.source === 'DEMO');
 
   return (
     <div className="dashboard-page page-enter">
@@ -35,19 +34,29 @@ export default function Dashboard({ data, onNavigate }) {
         <div className="hero-index">FLAW / SEC<br /><span>EST. FOR BUILDERS</span></div>
       </section>
 
-      {hasDemoData && (
+      {!data.analysis.scanned ? (
         <div className="demo-notice" role="status">
           <span className="demo-notice-mark">i</span>
-          <span><strong>Datos de demostración.</strong> Las vulnerabilidades de este espacio no proceden de un feed en tiempo real.</span>
-          <StatusPill severity="DEMO">DEMO</StatusPill>
+          <span><strong>Aún no has analizado tus dependencias.</strong> Usa «Analizar» para consultar los avisos reales de OSV.</span>
+          <StatusPill severity="OSV">OSV</StatusPill>
+        </div>
+      ) : !data.analysis.upToDate ? (
+        <div className="demo-notice" role="status">
+          <span className="demo-notice-mark">!</span>
+          <span><strong>El inventario ha cambiado.</strong> Vuelve a analizarlo para actualizar los resultados.</span>
+        </div>
+      ) : (
+        <div className="analysis-freshness" role="status">
+          <Icon name="check" size={14} />
+          Último análisis OSV: {formatDate(data.analysis.scannedAt)} · {formatNumber(data.analysis.dependencyCount)} dependencias
         </div>
       )}
 
       <section aria-label="Métricas de seguridad" className="stats-grid">
         <StatCard label="Proyectos" value={formatNumber(summary.projectCount)} note="repositorios vigilados" icon="box" accent="01 / SCOPE" />
         <StatCard label="Dependencias" value={formatNumber(summary.dependencyCount)} note="paquetes en seguimiento" icon="layers" accent="02 / STACK" tone="blue" />
-        <StatCard label="Vulnerabilidades" value={formatNumber(summary.vulnerabilityCount)} note="en la base de datos" icon="shield" accent="03 / INDEX" tone="amber" />
-        <StatCard label="Alertas activas" value={formatNumber(summary.activeAlertCount)} note={`${criticalCount} críticas en el catálogo`} icon="alert" accent="04 / PRIORITY" tone="coral" />
+        <StatCard label="Vulnerabilidades" value={formatNumber(summary.vulnerabilityCount)} note="en las dependencias analizadas" icon="shield" accent="03 / INDEX" tone="amber" />
+        <StatCard label="Alertas activas" value={formatNumber(summary.activeAlertCount)} note={`${criticalCount} críticas detectadas`} icon="alert" accent="04 / PRIORITY" tone="coral" />
       </section>
 
       <div className="dashboard-columns">
@@ -133,7 +142,7 @@ export default function Dashboard({ data, onNavigate }) {
 
       <footer className="dashboard-footer">
         <span><Icon name="activity" size={14} /> Protegiendo el código que mueve el mundo.</span>
-        <span>ÚLTIMA PUBLICACIÓN EN EL CATÁLOGO: {formatDate(vulnerabilities[0]?.publishedAt)}</span>
+        <span>FUENTE: OPEN SOURCE VULNERABILITIES (OSV)</span>
       </footer>
     </div>
   );

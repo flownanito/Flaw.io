@@ -60,6 +60,10 @@ public class TrackedDependency {
         return id;
     }
 
+    public Project getProject() {
+        return project;
+    }
+
     public Ecosystem getEcosystem() {
         return ecosystem;
     }

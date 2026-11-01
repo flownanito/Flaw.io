@@ -13,6 +13,7 @@ import {
   deleteProject,
   loadWorkspace,
   removeDependency,
+  scanDependencies,
 } from './utils/api.js';
 import './styles/app.css';
 
@@ -21,6 +22,7 @@ const emptyData = {
   projects: [],
   vulnerabilities: [],
   alerts: [],
+  analysis: { scanned: false, upToDate: false, scannedAt: null, dependencyCount: 0, findingCount: 0 },
 };
 
 const pageComponents = {
@@ -35,6 +37,7 @@ export default function App() {
   const [data, setData] = useState(emptyData);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [toast, setToast] = useState(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -78,11 +81,30 @@ export default function App() {
     }
   }
 
+  async function runAnalysis() {
+    setAnalyzing(true);
+    try {
+      const result = await scanDependencies();
+      await refreshWorkspace(false);
+      setToast({
+        type: 'success',
+        message: result.findingCount === 0
+          ? `Análisis completado: ${result.dependencyCount} dependencias revisadas, sin coincidencias.`
+          : `Análisis completado: ${result.findingCount} hallazgos en ${result.dependencyCount} dependencias.`,
+      });
+    } catch (error) {
+      setToast({ type: 'error', message: error.message });
+    } finally {
+      setAnalyzing(false);
+    }
+  }
+
   const pageProps = {
     data,
     projects: data.projects,
     vulnerabilities: data.vulnerabilities,
     alerts: data.alerts,
+    analysisStatus: data.analysis,
     onNavigate: setPage,
     onCreateProject: () => setCreateDialogOpen(true),
     onAddDependency: (projectId, dependency) =>
@@ -107,6 +129,9 @@ export default function App() {
             refreshing={refreshing}
             onCreateProject={() => setCreateDialogOpen(true)}
             projectAction={page === 'projects'}
+            onAnalyze={runAnalysis}
+            analyzing={analyzing}
+            canAnalyze={data.summary.dependencyCount > 0}
             apiConnected={!loadError}
             loading={loading}
           />

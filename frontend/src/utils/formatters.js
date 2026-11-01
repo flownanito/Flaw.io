@@ -21,6 +21,7 @@ export function severityLabel(severity) {
     HIGH: 'Alta',
     MEDIUM: 'Media',
     LOW: 'Baja',
+    UNKNOWN: 'Sin puntuación',
   };
   return labels[severity] ?? severity ?? 'Sin clasificar';
 }

@@ -164,6 +164,12 @@
   color: var(--acid);
 }
 
+.score-unknown {
+  border-color: var(--line-strong);
+  color: var(--text-soft);
+  font-size: 11px;
+}
+
 .vulnerability-details {
   min-width: 0;
 }
@@ -247,6 +253,22 @@
   margin-left: 3px;
   color: var(--acid);
   font-family: var(--font-mono);
+}
+
+.advisory-link {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+  color: var(--acid);
+  font-size: 10px;
+  text-decoration: none;
+}
+
+.advisory-link:hover {
+  color: #e0ff9a;
+  text-decoration: underline;
 }
 
 .catalog-empty {
