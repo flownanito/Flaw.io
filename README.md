@@ -1,16 +1,16 @@
 # Flaw
 
-Flaw es un MVP para registrar proyectos, vigilar sus dependencias y encontrar coincidencias con vulnerabilidades conocidas. Incluye una API REST con Spring Boot y un dashboard web con React.
+Flaw es una aplicación para registrar proyectos, vigilar sus dependencias directas y contrastar las versiones exactas con avisos de seguridad publicados en [OSV (Open Source Vulnerabilities)](https://osv.dev/). Incluye una API REST con Spring Boot y un dashboard web con React.
 
-> **Estado del producto:** proyecto en desarrollo. El catálogo actual contiene registros de demostración; no consume feeds de seguridad en tiempo real. La API local tampoco tiene autenticación: no la expongas a Internet ni la uses como servicio de producción.
+> **Alcance:** el análisis consulta OSV al pulsar «Analizar». No es IA ni sustituye una auditoría: solo revisa las dependencias y versiones que registres, no lee automáticamente repositorios ni manifiestos y no resuelve dependencias transitivas. La API local tampoco tiene autenticación: no la expongas a Internet ni la uses como servicio de producción.
 
 ## Funcionalidades
 
 - Crear y administrar proyectos y sus repositorios.
 - Registrar dependencias de npm, Maven, PyPI, Go y Cargo.
-- Consultar un catálogo de vulnerabilidades con filtros por severidad y búsqueda.
-- Ver alertas que relacionan las dependencias vigiladas con vulnerabilidades del catálogo.
-- Usar datos de demostración claramente identificados como `DEMO`.
+- Analizar las versiones registradas consultando la API de OSV.
+- Ver alertas relacionadas con el proyecto y paquete afectados, la versión corregida disponible y el aviso original.
+- Guardar el último análisis y volver a ejecutarlo después de cambiar el inventario.
 
 ## Tecnologías
 
@@ -25,6 +25,7 @@ Flaw es un MVP para registrar proyectos, vigilar sus dependencias y encontrar co
 
 - Java 25 o posterior y Maven 3.9 o posterior.
 - Node.js 20 o posterior y npm.
+- Conexión a Internet para consultar OSV durante el análisis.
 - Docker solo si quieres usar PostgreSQL localmente en lugar de la base H2 predeterminada.
 
 ## Arranque rápido
@@ -59,7 +60,7 @@ Abre <http://localhost:3000>. Para validar el frontend en producción, ejecuta `
 
 El perfil `dev` usa por defecto una base H2 persistente en `backend/data/`. Spring la crea al iniciar, guarda los cambios entre reinicios y ese directorio está excluido de Git. No hacen falta Docker ni PostgreSQL para el arranque rápido.
 
-Cuando la base está vacía, la API carga un proyecto de ejemplo y registros de demostración para Log4Shell y Spring4Shell. Los registros están marcados como `DEMO` y sirven para probar el dashboard; no son un feed actualizado ni asesoramiento de remediación.
+Cuando la base está vacía, la API carga un proyecto de ejemplo con versiones antiguas de Log4j y Spring. Sus resultados no se inventan ni se cargan como catálogo estático: aparecen solo después de consultar OSV con el botón **Analizar**. El último análisis se guarda en la base local. Si OSV no está disponible, la API informa del error y conserva el último resultado correcto.
 
 Para usar PostgreSQL, inicia el servicio incluido en `docker-compose.yml`:
 
@@ -88,10 +89,14 @@ El dashboard usa `http://localhost:8080/api` por defecto. Para apuntarlo a otra 
 | `DELETE` | `/api/projects/{id}` | Elimina un proyecto |
 | `POST` | `/api/projects/{id}/dependencies` | Añade una dependencia |
 | `DELETE` | `/api/projects/{id}/dependencies/{dependencyId}` | Deja de vigilar una dependencia |
-| `GET` | `/api/vulnerabilities` | Consulta el catálogo de vulnerabilidades |
-| `GET` | `/api/alerts` | Consulta coincidencias en los proyectos |
+| `GET` | `/api/vulnerabilities` | Consulta los avisos del último análisis vigente |
+| `GET` | `/api/alerts` | Consulta los hallazgos del último análisis vigente |
+| `POST` | `/api/analysis/scan` | Analiza las dependencias registradas con OSV |
+| `GET` | `/api/analysis/status` | Consulta la fecha y vigencia del último análisis |
 
 Las peticiones de creación validan los datos de entrada. Añadir dos veces el mismo paquete al mismo proyecto devuelve `409 Conflict`.
+
+Para conocer en detalle cómo se consultan OSV, cómo se interpretan los resultados y qué límites tiene el análisis, consulta [Cómo analiza Flaw las dependencias](./ANALISIS-DEPENDENCIAS.md).
 
 ## Estructura del proyecto
 
@@ -103,4 +108,4 @@ frontend/   Dashboard React y componentes
 
 ## Límites actuales
 
-La ingesta desde NVD o GitHub Security Advisories, la autenticación, el aislamiento de usuarios y la entrega de notificaciones todavía no están implementados. Redis aparece en la configuración de Docker para trabajo futuro y no es necesario para ejecutar el MVP actual.
+La importación automática de manifiestos, el análisis de dependencias transitivas, la autenticación, el aislamiento de usuarios y la entrega de notificaciones todavía no están implementados. El valor CVSS solo se muestra si OSV entrega un valor numérico; no se inventa una puntuación a partir de un vector. Redis aparece en la configuración de Docker para trabajo futuro y no es necesario para ejecutar el MVP actual.

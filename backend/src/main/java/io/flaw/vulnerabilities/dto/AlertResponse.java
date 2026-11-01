@@ -7,13 +7,14 @@ public record AlertResponse(
         VulnerabilityResponse vulnerability,
         Long projectId,
         String projectName,
-        DependencyResponse dependency
+        DependencyResponse dependency,
+        String details
 ) {
     public static AlertResponse from(
             VulnerabilityResponse vulnerability,
             Project project,
             DependencyResponse dependency
     ) {
-        return new AlertResponse(vulnerability, project.getId(), project.getName(), dependency);
+        return new AlertResponse(vulnerability, project.getId(), project.getName(), dependency, null);
     }
 }

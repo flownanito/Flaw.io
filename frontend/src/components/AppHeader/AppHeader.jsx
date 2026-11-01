@@ -6,9 +6,21 @@ const pageTitles = {
   projects: { eyebrow: 'TU INVENTARIO', title: 'Proyectos' },
   vulnerabilities: { eyebrow: 'EL PANORAMA GLOBAL', title: 'Vulnerabilidades' },
   alerts: { eyebrow: 'COINCIDENCIAS EN TU STACK', title: 'Alertas activas' },
+  'alert-detail': { eyebrow: 'INFORME DE SEGURIDAD', title: 'Detalle de vulnerabilidad' },
 };
 
-export default function AppHeader({ page, onRefresh, refreshing, onCreateProject, projectAction, apiConnected, loading }) {
+export default function AppHeader({
+  page,
+  onRefresh,
+  refreshing,
+  onCreateProject,
+  projectAction,
+  onAnalyze,
+  analyzing,
+  canAnalyze,
+  apiConnected,
+  loading,
+}) {
   const heading = pageTitles[page] ?? pageTitles.overview;
 
   return (
@@ -31,6 +43,16 @@ export default function AppHeader({ page, onRefresh, refreshing, onCreateProject
           title="Actualizar datos"
         >
           <Icon name="refresh" className={refreshing ? 'is-spinning' : ''} />
+        </button>
+        <button
+          className="button button-primary header-analyze"
+          type="button"
+          onClick={onAnalyze}
+          disabled={!canAnalyze || analyzing || loading}
+          title={canAnalyze ? 'Consultar OSV para las dependencias registradas' : 'Añade dependencias para iniciar el análisis'}
+        >
+          <Icon name={analyzing ? 'refresh' : 'scan'} className={analyzing ? 'is-spinning' : ''} size={16} />
+          <span>{analyzing ? 'Analizando…' : 'Analizar'}</span>
         </button>
         {projectAction && (
           <button className="button button-primary header-create" type="button" onClick={onCreateProject}>

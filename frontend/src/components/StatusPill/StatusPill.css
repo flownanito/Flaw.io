@@ -47,3 +47,13 @@
   border-color: rgb(255 180 84 / 30%);
   color: var(--amber);
 }
+
+.status-osv {
+  border-color: rgb(103 180 255 / 28%);
+  color: var(--blue);
+}
+
+.status-unknown {
+  border-color: var(--line);
+  color: var(--text-soft);
+}

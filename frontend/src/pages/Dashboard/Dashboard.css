@@ -241,6 +241,23 @@
   margin-left: auto;
 }
 
+.analysis-freshness {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid rgb(196 244 58 / 20%);
+  color: var(--text-soft);
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
+.analysis-freshness svg {
+  flex: 0 0 auto;
+  color: var(--acid);
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -3,16 +3,19 @@ import AppHeader from './components/AppHeader/AppHeader.jsx';
 import CreateProjectDialog from './components/CreateProjectDialog/CreateProjectDialog.jsx';
 import Icon from './components/Icon/Icon.jsx';
 import Sidebar from './components/Sidebar/Sidebar.jsx';
+import AlertDetail from './pages/AlertDetail/AlertDetail.jsx';
 import Alerts from './pages/Alerts/Alerts.jsx';
 import Dashboard from './pages/Dashboard/Dashboard.jsx';
 import Projects from './pages/Projects/Projects.jsx';
 import Vulnerabilities from './pages/Vulnerabilities/Vulnerabilities.jsx';
+import { getAlertKey, getAlertHref, parseAppRoute } from './utils/alertRoutes.js';
 import {
   addDependency,
   createProject,
   deleteProject,
   loadWorkspace,
   removeDependency,
+  scanDependencies,
 } from './utils/api.js';
 import './styles/app.css';
 
@@ -21,6 +24,7 @@ const emptyData = {
   projects: [],
   vulnerabilities: [],
   alerts: [],
+  analysis: { scanned: false, upToDate: false, scannedAt: null, dependencyCount: 0, findingCount: 0 },
 };
 
 const pageComponents = {
@@ -31,13 +35,33 @@ const pageComponents = {
 };
 
 export default function App() {
-  const [page, setPage] = useState('overview');
+  const [route, setRoute] = useState(() => parseAppRoute(window.location.hash));
   const [data, setData] = useState(emptyData);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [toast, setToast] = useState(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const { page, alertKey } = route;
+
+  function navigateToPage(nextPage) {
+    window.history.pushState({ flawApp: true }, '', `#${nextPage}`);
+    setRoute({ page: nextPage, alertKey: null });
+  }
+
+  function openAlert(alert) {
+    window.history.pushState({ flawApp: true }, '', getAlertHref(alert));
+    setRoute({ page: 'alert-detail', alertKey: getAlertKey(alert) });
+  }
+
+  function backToAlerts() {
+    if (window.history.state?.flawApp) {
+      window.history.back();
+      return;
+    }
+    navigateToPage('alerts');
+  }
 
   async function refreshWorkspace(showLoading = true) {
     if (showLoading) setRefreshing(true);
@@ -67,6 +91,15 @@ export default function App() {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    function handlePopState() {
+      setRoute(parseAppRoute(window.location.hash));
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   async function runMutation(action, successMessage) {
     try {
       await action();
@@ -78,12 +111,32 @@ export default function App() {
     }
   }
 
+  async function runAnalysis() {
+    setAnalyzing(true);
+    try {
+      const result = await scanDependencies();
+      await refreshWorkspace(false);
+      setToast({
+        type: 'success',
+        message: result.findingCount === 0
+          ? `Análisis completado: ${result.dependencyCount} dependencias revisadas, sin coincidencias.`
+          : `Análisis completado: ${result.findingCount} hallazgos en ${result.dependencyCount} dependencias.`,
+      });
+    } catch (error) {
+      setToast({ type: 'error', message: error.message });
+    } finally {
+      setAnalyzing(false);
+    }
+  }
+
   const pageProps = {
     data,
     projects: data.projects,
     vulnerabilities: data.vulnerabilities,
     alerts: data.alerts,
-    onNavigate: setPage,
+    analysisStatus: data.analysis,
+    onNavigate: navigateToPage,
+    onSelectAlert: openAlert,
     onCreateProject: () => setCreateDialogOpen(true),
     onAddDependency: (projectId, dependency) =>
       runMutation(() => addDependency(projectId, dependency), 'Dependencia añadida a la vigilancia.'),
@@ -94,11 +147,18 @@ export default function App() {
   };
 
   const Page = pageComponents[page] ?? Dashboard;
+  const selectedAlert = alertKey
+    ? data.alerts.find((alert) => getAlertKey(alert) === alertKey)
+    : null;
 
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">Saltar al contenido</a>
-      <Sidebar activePage={page} onNavigate={setPage} alertCount={data.summary.activeAlertCount} />
+      <Sidebar
+        activePage={page === 'alert-detail' ? 'alerts' : page}
+        onNavigate={navigateToPage}
+        alertCount={data.summary.activeAlertCount}
+      />
       <main className="main-area" id="main-content">
         <div className="main-content">
           <AppHeader
@@ -107,6 +167,9 @@ export default function App() {
             refreshing={refreshing}
             onCreateProject={() => setCreateDialogOpen(true)}
             projectAction={page === 'projects'}
+            onAnalyze={runAnalysis}
+            analyzing={analyzing}
+            canAnalyze={data.summary.dependencyCount > 0}
             apiConnected={!loadError}
             loading={loading}
           />
@@ -126,6 +189,8 @@ export default function App() {
               <span className="loading-mark"><Icon name="code" size={22} /></span>
               <span>Conectando con tu stack…</span>
             </div>
+          ) : page === 'alert-detail' ? (
+            <AlertDetail alert={selectedAlert} onBack={backToAlerts} />
           ) : (
             <Page {...pageProps} />
           )}

@@ -117,6 +117,10 @@
   padding: 0;
 }
 
+.header-analyze {
+  min-width: 106px;
+}
+
 .is-spinning {
   animation: spin 900ms linear infinite;
 }
@@ -141,6 +145,13 @@
   }
 
   .header-create {
+    min-height: 38px;
+    padding: 0 9px;
+    font-size: 11px;
+  }
+
+  .header-analyze {
+    min-width: 0;
     min-height: 38px;
     padding: 0 9px;
     font-size: 11px;
