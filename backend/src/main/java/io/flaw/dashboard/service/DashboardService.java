@@ -3,8 +3,7 @@ package io.flaw.dashboard.service;
 import io.flaw.dashboard.dto.DashboardSummaryResponse;
 import io.flaw.projects.repository.ProjectRepository;
 import io.flaw.projects.repository.TrackedDependencyRepository;
-import io.flaw.vulnerabilities.service.AlertService;
-import io.flaw.vulnerabilities.repository.VulnerabilityRepository;
+import io.flaw.vulnerabilities.service.AnalysisService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,19 +12,16 @@ public class DashboardService {
 
     private final ProjectRepository projectRepository;
     private final TrackedDependencyRepository dependencyRepository;
-    private final VulnerabilityRepository vulnerabilityRepository;
-    private final AlertService alertService;
+    private final AnalysisService analysisService;
 
     public DashboardService(
             ProjectRepository projectRepository,
             TrackedDependencyRepository dependencyRepository,
-            VulnerabilityRepository vulnerabilityRepository,
-            AlertService alertService
+            AnalysisService analysisService
     ) {
         this.projectRepository = projectRepository;
         this.dependencyRepository = dependencyRepository;
-        this.vulnerabilityRepository = vulnerabilityRepository;
-        this.alertService = alertService;
+        this.analysisService = analysisService;
     }
 
     @Transactional(readOnly = true)
@@ -33,8 +29,8 @@ public class DashboardService {
         return new DashboardSummaryResponse(
                 projectRepository.count(),
                 dependencyRepository.count(),
-                vulnerabilityRepository.count(),
-                alertService.findAll().size()
+                analysisService.findAllVulnerabilities().size(),
+                analysisService.findAllAlerts().size()
         );
     }
 }

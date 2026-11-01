@@ -249,6 +249,13 @@
   margin-top: 12px;
 }
 
+.alerts-scan-date {
+  margin-top: 13px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
 .alerts-disclaimer {
   display: flex;
   align-items: flex-start;

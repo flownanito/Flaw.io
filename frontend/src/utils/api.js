@@ -36,6 +36,8 @@ export const getDashboardSummary = () => request('/dashboard/summary');
 export const getProjects = () => request('/projects');
 export const getVulnerabilities = () => request('/vulnerabilities');
 export const getAlerts = () => request('/alerts');
+export const getAnalysisStatus = () => request('/analysis/status');
+export const scanDependencies = () => request('/analysis/scan', { method: 'POST' });
 
 export const createProject = (project) =>
   request('/projects', { method: 'POST', body: JSON.stringify(project) });
@@ -53,12 +55,13 @@ export const removeDependency = (projectId, dependencyId) =>
   request(`/projects/${projectId}/dependencies/${dependencyId}`, { method: 'DELETE' });
 
 export async function loadWorkspace() {
-  const [summary, projects, vulnerabilities, alerts] = await Promise.all([
+  const [summary, projects, vulnerabilities, alerts, analysis] = await Promise.all([
     getDashboardSummary(),
     getProjects(),
     getVulnerabilities(),
     getAlerts(),
+    getAnalysisStatus(),
   ]);
 
-  return { summary, projects, vulnerabilities, alerts };
+  return { summary, projects, vulnerabilities, alerts, analysis };
 }

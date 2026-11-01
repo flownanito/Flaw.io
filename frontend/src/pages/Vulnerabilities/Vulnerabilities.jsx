@@ -4,9 +4,9 @@ import StatusPill from '../../components/StatusPill/StatusPill.jsx';
 import { ecosystemLabel, formatDate } from '../../utils/formatters.js';
 import './Vulnerabilities.css';
 
-const filters = ['TODAS', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+const filters = ['TODAS', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'];
 
-export default function Vulnerabilities({ vulnerabilities }) {
+export default function Vulnerabilities({ vulnerabilities, analysisStatus }) {
   const [filter, setFilter] = useState('TODAS');
   const [query, setQuery] = useState('');
   const normalizedQuery = query.trim().toLowerCase();
@@ -24,7 +24,7 @@ export default function Vulnerabilities({ vulnerabilities }) {
   return (
     <div className="vulnerabilities-page page-enter">
       <div className="vulnerabilities-intro">
-        <p>El catálogo que usa Flaw para cruzar avisos con las dependencias de tus proyectos.</p>
+        <p>Avisos de OSV que coinciden con las versiones registradas en tus proyectos.</p>
         <div className="catalog-counter"><strong>{filtered.length.toString().padStart(2, '0')}</strong><span>RESULTADOS / {vulnerabilities.length.toString().padStart(2, '0')}</span></div>
       </div>
 
@@ -56,14 +56,14 @@ export default function Vulnerabilities({ vulnerabilities }) {
             {filtered.map((item) => (
               <article className="vulnerability-card" key={item.cveId}>
                 <div className="vulnerability-score">
-                  <span className={`score-ring score-${item.severity?.toLowerCase()}`}>{Number(item.cvssScore).toFixed(1)}</span>
+                  <span className={`score-ring score-${item.severity?.toLowerCase()}`}>{item.cvssScore == null ? 'N/D' : Number(item.cvssScore).toFixed(1)}</span>
                   <span>CVSS</span>
                 </div>
                 <div className="vulnerability-details">
                   <div className="vulnerability-title-line">
                     <code className="vulnerability-cve">{item.cveId}</code>
                     <StatusPill severity={item.severity} />
-                    {item.source === 'DEMO' && <StatusPill severity="DEMO">DEMO</StatusPill>}
+                    {item.source === 'OSV' && <StatusPill severity="OSV">OSV</StatusPill>}
                   </div>
                   <h2>{item.title}</h2>
                   <p>{item.description}</p>
@@ -76,6 +76,11 @@ export default function Vulnerabilities({ vulnerabilities }) {
                     <span>Afecta a <code>{item.vulnerableVersions}</code></span>
                     <span>Corregida en <code>{item.patchedVersion || 'Sin parche indicado'}</code></span>
                   </div>
+                  {item.referenceUrl && (
+                    <a className="advisory-link" href={item.referenceUrl} target="_blank" rel="noreferrer">
+                      Abrir aviso original <Icon name="external" size={13} />
+                    </a>
+                  )}
                 </div>
               </article>
             ))}
@@ -83,8 +88,12 @@ export default function Vulnerabilities({ vulnerabilities }) {
         ) : (
           <div className="catalog-empty">
             <Icon name="search" size={23} />
-            <strong>No encontramos resultados.</strong>
-            <span>Prueba otra búsqueda o cambia el filtro de severidad.</span>
+            <strong>{!analysisStatus.scanned ? 'Todavía no hay resultados de análisis.' : !analysisStatus.upToDate ? 'El análisis necesita actualizarse.' : 'No encontramos resultados.'}</strong>
+            <span>{!analysisStatus.scanned
+              ? 'Pulsa «Analizar» para consultar las versiones registradas en OSV.'
+              : !analysisStatus.upToDate
+                ? 'Vuelve a analizar las dependencias para obtener resultados actualizados.'
+                : 'Prueba otra búsqueda o cambia el filtro de severidad.'}</span>
             {(query || filter !== 'TODAS') && (
               <button className="text-link" type="button" onClick={() => { setQuery(''); setFilter('TODAS'); }}>Limpiar filtros</button>
             )}
