@@ -19,7 +19,8 @@ public class AlertService {
                         finding.vulnerability(),
                         finding.projectId(),
                         finding.projectName(),
-                        finding.dependency()
+                        finding.dependency(),
+                        finding.details()
                 ))
                 .toList();
     }

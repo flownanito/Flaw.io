@@ -1,5 +1,6 @@
 package io.flaw.vulnerabilities.service;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -87,13 +88,18 @@ class AnalysisServiceIntegrationTest {
                 .andExpect(jsonPath("$.dependencyCount").value(1))
                 .andExpect(jsonPath("$.findingCount").value(1));
 
-        mockMvc.perform(get("/api/alerts"))
+        MvcResult alertsResult = mockMvc.perform(get("/api/alerts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].vulnerability.cveId").value("CVE-2021-23337"))
                 .andExpect(jsonPath("$[0].vulnerability.source").value("OSV"))
                 .andExpect(jsonPath("$[0].vulnerability.cvssScore").value(7.5))
                 .andExpect(jsonPath("$[0].projectName").value("analysis integration"))
-                .andExpect(jsonPath("$[0].vulnerability.patchedVersion").value("4.17.21"));
+                .andExpect(jsonPath("$[0].vulnerability.patchedVersion").value("4.17.21"))
+                .andExpect(jsonPath("$[0].details").isNotEmpty())
+                .andReturn();
+        JsonNode alert = objectMapper.readTree(alertsResult.getResponse().getContentAsString()).get(0);
+        assertTrue(alert.get("details").asText().length() > alert.get("vulnerability")
+                .get("description").asText().length());
 
         mockMvc.perform(get("/api/analysis/status"))
                 .andExpect(status().isOk())
@@ -120,7 +126,7 @@ class AnalysisServiceIntegrationTest {
         return new OsvData.OsvVulnerability(
                 "GHSA-29mw-wpgm-hmr9",
                 "Regular Expression Denial of Service in lodash",
-                "A test advisory from OSV.",
+                "A test advisory from OSV. " + "Detailed technical impact and affected usage. ".repeat(20),
                 List.of("CVE-2021-23337"),
                 Instant.parse("2021-02-15T00:00:00Z"),
                 List.of(new OsvData.OsvSeverity("CVSS_V3", "7.5")),

@@ -11,7 +11,8 @@ public record ScanFindingResponse(
         VulnerabilityResponse vulnerability,
         Long projectId,
         String projectName,
-        DependencyResponse dependency
+        DependencyResponse dependency,
+        String details
 ) {
     public static ScanFindingResponse from(ScanFinding finding) {
         TrackedDependency dependency = finding.getDependency();
@@ -34,7 +35,8 @@ public record ScanFindingResponse(
                 vulnerability,
                 project.getId(),
                 project.getName(),
-                DependencyResponse.from(dependency)
+                DependencyResponse.from(dependency),
+                finding.getFullDetails()
         );
     }
 }

@@ -1,5 +1,6 @@
 import Icon from '../../components/Icon/Icon.jsx';
 import StatusPill from '../../components/StatusPill/StatusPill.jsx';
+import { getAlertHref } from '../../utils/alertRoutes.js';
 import { ecosystemLabel, formatDate } from '../../utils/formatters.js';
 import './Alerts.css';
 
@@ -28,7 +29,7 @@ function getEmptyState(status) {
   };
 }
 
-export default function Alerts({ alerts, onNavigate, analysisStatus }) {
+export default function Alerts({ alerts, onNavigate, onSelectAlert, analysisStatus }) {
   const criticalCount = alerts.filter((alert) => alert.vulnerability.severity === 'CRITICAL').length;
   const analysisNotReady = !analysisStatus.scanned || !analysisStatus.upToDate;
   const emptyState = getEmptyState(analysisStatus);
@@ -47,7 +48,17 @@ export default function Alerts({ alerts, onNavigate, analysisStatus }) {
       {alerts.length > 0 ? (
         <section className="alerts-list" aria-label="Alertas coincidentes">
           {alerts.map((alert, index) => (
-            <article className="alert-card" key={`${alert.projectId}-${alert.vulnerability.cveId}-${alert.dependency.id}`}>
+            <a
+              className="alert-card alert-card-link"
+              href={getAlertHref(alert)}
+              key={`${alert.projectId}-${alert.vulnerability.cveId}-${alert.dependency.id}`}
+              aria-label={`Abrir informe de ${alert.vulnerability.cveId}: ${alert.vulnerability.title}`}
+              onClick={(event) => {
+                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                event.preventDefault();
+                onSelectAlert(alert);
+              }}
+            >
               <div className="alert-card-index">{(index + 1).toString().padStart(2, '0')}</div>
               <div className="alert-card-body">
                 <div className="alert-card-title">
@@ -69,7 +80,8 @@ export default function Alerts({ alerts, onNavigate, analysisStatus }) {
                 </div>
               </div>
               <div className="alert-score"><strong>{alert.vulnerability.cvssScore == null ? 'N/D' : Number(alert.vulnerability.cvssScore).toFixed(1)}</strong><span>CVSS</span></div>
-            </article>
+              <span className="alert-open-report">Abrir informe <Icon name="arrowRight" size={14} /></span>
+            </a>
           ))}
         </section>
       ) : (

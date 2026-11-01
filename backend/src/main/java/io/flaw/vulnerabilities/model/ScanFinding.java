@@ -41,6 +41,9 @@ public class ScanFinding {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "full_details", columnDefinition = "TEXT")
+    private String fullDetails;
+
     @Column(name = "vulnerable_versions", nullable = false, columnDefinition = "TEXT")
     private String vulnerableVersions;
 
@@ -67,6 +70,7 @@ public class ScanFinding {
             String advisoryId,
             String title,
             String description,
+            String fullDetails,
             String vulnerableVersions,
             String patchedVersion,
             BigDecimal cvssScore,
@@ -78,6 +82,7 @@ public class ScanFinding {
         this.advisoryId = advisoryId;
         this.title = title;
         this.description = description;
+        this.fullDetails = fullDetails;
         this.vulnerableVersions = vulnerableVersions;
         this.patchedVersion = patchedVersion;
         this.cvssScore = cvssScore;
@@ -100,6 +105,10 @@ public class ScanFinding {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getFullDetails() {
+        return fullDetails;
     }
 
     public String getVulnerableVersions() {

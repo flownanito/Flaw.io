@@ -6,6 +6,7 @@ const pageTitles = {
   projects: { eyebrow: 'TU INVENTARIO', title: 'Proyectos' },
   vulnerabilities: { eyebrow: 'EL PANORAMA GLOBAL', title: 'Vulnerabilidades' },
   alerts: { eyebrow: 'COINCIDENCIAS EN TU STACK', title: 'Alertas activas' },
+  'alert-detail': { eyebrow: 'INFORME DE SEGURIDAD', title: 'Detalle de vulnerabilidad' },
 };
 
 export default function AppHeader({

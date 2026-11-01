@@ -96,6 +96,8 @@ El dashboard usa `http://localhost:8080/api` por defecto. Para apuntarlo a otra 
 
 Las peticiones de creación validan los datos de entrada. Añadir dos veces el mismo paquete al mismo proyecto devuelve `409 Conflict`.
 
+Para conocer en detalle cómo se consultan OSV, cómo se interpretan los resultados y qué límites tiene el análisis, consulta [Cómo analiza Flaw las dependencias](./ANALISIS-DEPENDENCIAS.md).
+
 ## Estructura del proyecto
 
 ```text

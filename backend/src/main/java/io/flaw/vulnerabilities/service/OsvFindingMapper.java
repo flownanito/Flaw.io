@@ -36,7 +36,8 @@ public class OsvFindingMapper {
                 .findFirst()
                 .orElse(vulnerability.id());
         String title = truncate(plainText(firstNonBlank(vulnerability.summary(), id)), 300);
-        String description = conciseDescription(vulnerability.details(), title);
+        String fullDetails = fullDescription(vulnerability.details(), title);
+        String description = conciseDescription(fullDetails, title);
         List<VersionRange> ranges = affectedPackages.stream()
                 .flatMap(affected -> formatRanges(affected).stream())
                 .distinct()
@@ -66,6 +67,7 @@ public class OsvFindingMapper {
                 id,
                 title,
                 description,
+                fullDetails,
                 vulnerableVersions,
                 fixedVersion,
                 score,
@@ -126,14 +128,27 @@ public class OsvFindingMapper {
     }
 
     private BigDecimal cvssScore(OsvData.OsvVulnerability vulnerability) {
-        return Optional.ofNullable(vulnerability.severity())
-                .orElse(List.of())
-                .stream()
-                .map(OsvData.OsvSeverity::score)
-                .filter(score -> score != null && score.matches("\\d+(\\.\\d+)?"))
-                .map(BigDecimal::new)
-                .findFirst()
-                .orElse(null);
+        for (OsvData.OsvSeverity severity : Optional.ofNullable(vulnerability.severity()).orElse(List.of())) {
+            String score = severity.score();
+            if (score == null || score.isBlank()) {
+                continue;
+            }
+            if (score.matches("\\d+(\\.\\d+)?")) {
+                BigDecimal numericScore = new BigDecimal(score);
+                if (numericScore.compareTo(BigDecimal.ZERO) >= 0
+                        && numericScore.compareTo(BigDecimal.TEN) <= 0) {
+                    return numericScore;
+                }
+                continue;
+            }
+            if ("CVSS_V3".equalsIgnoreCase(severity.type())) {
+                Optional<BigDecimal> calculatedScore = CvssV3Calculator.calculateBaseScore(score);
+                if (calculatedScore.isPresent()) {
+                    return calculatedScore.get();
+                }
+            }
+        }
+        return null;
     }
 
     private String severity(BigDecimal score, OsvData.OsvVulnerability vulnerability) {
@@ -185,6 +200,21 @@ public class OsvFindingMapper {
         }
         int end = cleaned.lastIndexOf(' ', 279);
         return cleaned.substring(0, end > 0 ? end : 279).stripTrailing() + "…";
+    }
+
+    private String fullDescription(String details, String fallback) {
+        String cleaned = firstNonBlank(details, fallback)
+                .replaceAll("(?m)^#{1,6}\\s*", "")
+                .replaceAll("\\[([^\\]]+)]\\(https?://[^)]+\\)", "$1")
+                .replaceAll("`([^`]+)`", "$1")
+                .replaceAll("\\*{1,2}", "")
+                .replaceAll("(?m)^\\s*>+\\s*", "")
+                .replaceAll("(?m)^\\s*[-*]\\s+", "• ")
+                .replaceAll("\\r\\n?", "\n")
+                .replaceAll("[\\t\\x0B\\f ]+", " ")
+                .replaceAll("\\n{3,}", "\n\n")
+                .trim();
+        return truncate(cleaned, 12_000) + (cleaned.length() > 12_000 ? "…" : "");
     }
 
     private String plainText(String value) {
