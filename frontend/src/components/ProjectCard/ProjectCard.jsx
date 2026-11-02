@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import Icon from '../Icon/Icon.jsx';
 import { ecosystemLabel } from '../../utils/formatters.js';
+import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import './ProjectCard.css';
 
 const ecosystems = ['NPM', 'MAVEN', 'PYPI', 'GO', 'CARGO'];
 
 export default function ProjectCard({ project, onAddDependency, onRemoveDependency, onDeleteProject }) {
+  const { t } = useLanguage();
   const [showForm, setShowForm] = useState(false);
   const [ecosystem, setEcosystem] = useState('NPM');
   const [packageName, setPackageName] = useState('');
@@ -25,7 +27,7 @@ export default function ProjectCard({ project, onAddDependency, onRemoveDependen
       setVersion('');
       setShowForm(false);
     } catch (requestError) {
-      setError(requestError.message);
+      setError(t(requestError.message));
     } finally {
       setSaving(false);
     }
@@ -36,17 +38,17 @@ export default function ProjectCard({ project, onAddDependency, onRemoveDependen
     try {
       await onRemoveDependency(project.id, dependencyId);
     } catch (requestError) {
-      setError(requestError.message);
+      setError(t(requestError.message));
     }
   }
 
   async function removeProject() {
-    if (!window.confirm(`¿Eliminar el proyecto "${project.name}" y sus dependencias?`)) return;
+    if (!window.confirm(t('¿Eliminar el proyecto "{name}" y sus dependencias?', { name: project.name }))) return;
     setError('');
     try {
       await onDeleteProject(project.id);
     } catch (requestError) {
-      setError(requestError.message);
+      setError(t(requestError.message));
     }
   }
 
@@ -56,14 +58,14 @@ export default function ProjectCard({ project, onAddDependency, onRemoveDependen
         <span className="project-avatar">{project.name.slice(0, 2).toUpperCase()}</span>
         <div className="project-title">
           <h3>{project.name}</h3>
-          <p>{project.description || 'Sin descripción'}</p>
+          <p>{project.description || t('Sin descripción')}</p>
         </div>
         <button
           className="icon-button project-delete"
           type="button"
           onClick={removeProject}
-          aria-label={`Eliminar ${project.name}`}
-          title="Eliminar proyecto"
+          aria-label={t('Eliminar {name}', { name: project.name })}
+          title={t('Eliminar proyecto')}
         >
           <Icon name="trash" size={16} />
         </button>
@@ -78,7 +80,7 @@ export default function ProjectCard({ project, onAddDependency, onRemoveDependen
       )}
 
       <div className="dependency-heading">
-        <span>DEPENDENCIAS</span>
+        <span>{t('DEPENDENCIAS')}</span>
         <span className="dependency-count">{dependencies.length.toString().padStart(2, '0')}</span>
       </div>
 
@@ -93,8 +95,8 @@ export default function ProjectCard({ project, onAddDependency, onRemoveDependen
                 className="dependency-remove"
                 type="button"
                 onClick={() => removeDependency(dependency.id)}
-                aria-label={`Dejar de vigilar ${dependency.packageName}`}
-                title="Dejar de vigilar"
+                aria-label={t('Dejar de vigilar {name}', { name: dependency.packageName })}
+                title={t('Dejar de vigilar')}
               >
                 <Icon name="close" size={13} />
               </button>
@@ -102,7 +104,7 @@ export default function ProjectCard({ project, onAddDependency, onRemoveDependen
           ))}
         </ul>
       ) : (
-        <p className="dependency-empty">Todavía no vigilas dependencias en este proyecto.</p>
+        <p className="dependency-empty">{t('Todavía no vigilas dependencias en este proyecto.')}</p>
       )}
 
       {error && <p className="form-error" role="alert">{error}</p>}
@@ -110,29 +112,29 @@ export default function ProjectCard({ project, onAddDependency, onRemoveDependen
       {showForm ? (
         <form className="dependency-form" onSubmit={submitDependency}>
           <label>
-            Ecosistema
+            {t('Ecosistema')}
             <select value={ecosystem} onChange={(event) => setEcosystem(event.target.value)}>
               {ecosystems.map((item) => <option key={item} value={item}>{ecosystemLabel(item)}</option>)}
             </select>
           </label>
           <label className="dependency-package-field">
-            Paquete
-            <input value={packageName} onChange={(event) => setPackageName(event.target.value)} required maxLength={255} placeholder="p. ej. express" />
+            {t('Paquete')}
+            <input value={packageName} onChange={(event) => setPackageName(event.target.value)} required maxLength={255} placeholder={t('p. ej. express')} />
           </label>
           <label className="dependency-version-field">
-            Versión
+            {t('Versión')}
             <input value={version} onChange={(event) => setVersion(event.target.value)} required maxLength={100} placeholder="4.18.2" />
           </label>
           <div className="dependency-form-actions">
-            <button className="button button-quiet" type="button" onClick={() => { setShowForm(false); setError(''); }}>Cancelar</button>
+            <button className="button button-quiet" type="button" onClick={() => { setShowForm(false); setError(''); }}>{t('Cancelar')}</button>
             <button className="button button-primary" type="submit" disabled={saving}>
-              {saving ? 'Guardando…' : 'Vigilar'}
+              {saving ? t('Guardando…') : t('Vigilar')}
             </button>
           </div>
         </form>
       ) : (
         <button className="add-dependency-button" type="button" onClick={() => setShowForm(true)}>
-          <Icon name="plus" size={15} /> Añadir dependencia
+          <Icon name="plus" size={15} /> {t('Añadir dependencia')}
         </button>
       )}
     </article>

@@ -12,9 +12,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.flaw.projects.model.Ecosystem;
 import io.flaw.projects.repository.ProjectRepository;
+import io.flaw.projects.repository.TrackedDependencyRepository;
 import io.flaw.vulnerabilities.model.AnalysisRun;
 import io.flaw.vulnerabilities.repository.AnalysisRunRepository;
 import io.flaw.vulnerabilities.repository.ScanFindingRepository;
+import io.flaw.translation.service.DeepLTranslationService;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +46,9 @@ class AnalysisServiceIntegrationTest {
     private ProjectRepository projectRepository;
 
     @Autowired
+    private TrackedDependencyRepository trackedDependencyRepository;
+
+    @Autowired
     private ScanFindingRepository scanFindingRepository;
 
     @Autowired
@@ -52,10 +57,14 @@ class AnalysisServiceIntegrationTest {
     @MockitoBean
     private OsvClient osvClient;
 
+    @MockitoBean
+    private DeepLTranslationService deepLTranslationService;
+
     @BeforeEach
     void cleanDatabase() {
         scanFindingRepository.deleteAllInBatch();
         analysisRunRepository.deleteAllInBatch();
+        trackedDependencyRepository.deleteAllInBatch();
         projectRepository.deleteAllInBatch();
     }
 
@@ -120,6 +129,20 @@ class AnalysisServiceIntegrationTest {
         mockMvc.perform(get("/api/alerts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void translatesAdvisoryTextThroughTheTranslationEndpoint() throws Exception {
+        when(deepLTranslationService.translate(List.of("A public OSV advisory"), "ES"))
+                .thenReturn(List.of("Un aviso público de OSV"));
+
+        mockMvc.perform(post("/api/translation/translate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"texts":["A public OSV advisory"],"targetLanguage":"ES"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.translations[0]").value("Un aviso público de OSV"));
     }
 
     private OsvData.OsvVulnerability lodashAdvisory() {

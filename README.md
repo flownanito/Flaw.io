@@ -26,6 +26,7 @@ Flaw es una aplicación para registrar proyectos, vigilar sus dependencias direc
 - Java 25 o posterior y Maven 3.9 o posterior.
 - Node.js 20 o posterior y npm.
 - Conexión a Internet para consultar OSV durante el análisis.
+- Una clave de API de DeepL solo si quieres traducir los avisos dinámicos al cambiar el idioma.
 - Docker solo si quieres usar PostgreSQL localmente en lugar de la base H2 predeterminada.
 
 ## Arranque rápido
@@ -78,6 +79,10 @@ DB_PASSWORD=flaw_local
 
 El dashboard usa `http://localhost:8080/api` por defecto. Para apuntarlo a otra API, define `VITE_API_URL` en `frontend/.env` (puedes partir de `frontend/.env.example`). Los orígenes permitidos se configuran con `FRONTEND_ORIGINS` o, para un solo origen, `FRONTEND_ORIGIN`.
 
+### Traducción de avisos
+
+La interfaz traduce los textos fijos localmente. Para traducir también los títulos y descripciones dinámicos de los avisos OSV, configura `DEEPL_AUTH_KEY` en el entorno del backend antes de iniciarlo. La API gratuita de DeepL se usa por defecto; para una cuenta Pro, configura también `DEEPL_API_URL=https://api.deepl.com`. La clave permanece en el backend y no debe guardarse en el repositorio ni en el frontend. Se envían a DeepL únicamente los textos públicos de los avisos; no se envían nombres de proyectos, paquetes, repositorios ni código. Sin una clave válida, Flaw conserva y muestra el texto original.
+
 ## API disponible
 
 | Método | Ruta | Descripción |
@@ -93,6 +98,7 @@ El dashboard usa `http://localhost:8080/api` por defecto. Para apuntarlo a otra 
 | `GET` | `/api/alerts` | Consulta los hallazgos del último análisis vigente |
 | `POST` | `/api/analysis/scan` | Analiza las dependencias registradas con OSV |
 | `GET` | `/api/analysis/status` | Consulta la fecha y vigencia del último análisis |
+| `POST` | `/api/translation/translate` | Traduce textos de avisos públicos a español o inglés mediante DeepL |
 
 Las peticiones de creación validan los datos de entrada. Añadir dos veces el mismo paquete al mismo proyecto devuelve `409 Conflict`.
 

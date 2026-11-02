@@ -1,22 +1,26 @@
-const dateFormatter = new Intl.DateTimeFormat('es-ES', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-});
-const numberFormatter = new Intl.NumberFormat('es-ES');
-
-export function formatDate(value) {
-  if (!value) return 'Fecha no disponible';
+export function formatDate(value, language = 'es') {
+  if (!value) return language === 'en' ? 'Date unavailable' : 'Fecha no disponible';
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? 'Fecha no disponible' : dateFormatter.format(date);
+  if (Number.isNaN(date.getTime())) return language === 'en' ? 'Date unavailable' : 'Fecha no disponible';
+  return new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'es-ES', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
 }
 
-export function formatNumber(value) {
-  return numberFormatter.format(value ?? 0);
+export function formatNumber(value, language = 'es') {
+  return new Intl.NumberFormat(language === 'en' ? 'en-US' : 'es-ES').format(value ?? 0);
 }
 
-export function severityLabel(severity) {
-  const labels = {
+export function severityLabel(severity, language = 'es') {
+  const labels = language === 'en' ? {
+    CRITICAL: 'Critical',
+    HIGH: 'High',
+    MEDIUM: 'Medium',
+    LOW: 'Low',
+    UNKNOWN: 'Unscored',
+  } : {
     CRITICAL: 'Crítica',
     HIGH: 'Alta',
     MEDIUM: 'Media',

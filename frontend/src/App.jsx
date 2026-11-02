@@ -8,6 +8,8 @@ import Alerts from './pages/Alerts/Alerts.jsx';
 import Dashboard from './pages/Dashboard/Dashboard.jsx';
 import Projects from './pages/Projects/Projects.jsx';
 import Vulnerabilities from './pages/Vulnerabilities/Vulnerabilities.jsx';
+import Settings from './pages/Settings/Settings.jsx';
+import { useLanguage } from './i18n/LanguageContext.jsx';
 import { getAlertKey, getAlertHref, parseAppRoute } from './utils/alertRoutes.js';
 import {
   addDependency,
@@ -32,15 +34,18 @@ const pageComponents = {
   projects: Projects,
   vulnerabilities: Vulnerabilities,
   alerts: Alerts,
+  settings: Settings,
 };
 
 export default function App() {
+  const { language, t } = useLanguage();
   const [route, setRoute] = useState(() => parseAppRoute(window.location.hash));
   const [data, setData] = useState(emptyData);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [translationWarning, setTranslationWarning] = useState(null);
   const [toast, setToast] = useState(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const { page, alertKey } = route;
@@ -67,8 +72,9 @@ export default function App() {
     if (showLoading) setRefreshing(true);
 
     try {
-      const workspace = await loadWorkspace();
+      const { translationWarning: workspaceTranslationWarning, ...workspace } = await loadWorkspace(language);
       setData(workspace);
+      setTranslationWarning(workspaceTranslationWarning);
       setLoadError('');
       return workspace;
     } catch (error) {
@@ -83,13 +89,20 @@ export default function App() {
   useEffect(() => {
     let active = true;
 
-    loadWorkspace()
-      .then((workspace) => { if (active) setData(workspace); })
+    setLoading(true);
+    loadWorkspace(language)
+      .then(({ translationWarning: workspaceTranslationWarning, ...workspace }) => {
+        if (active) {
+          setData(workspace);
+          setTranslationWarning(workspaceTranslationWarning);
+          setLoadError('');
+        }
+      })
       .catch((error) => { if (active) setLoadError(error.message); })
       .finally(() => { if (active) setLoading(false); });
 
     return () => { active = false; };
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     function handlePopState() {
@@ -106,7 +119,7 @@ export default function App() {
       await refreshWorkspace(false);
       setToast({ type: 'success', message: successMessage });
     } catch (error) {
-      setToast({ type: 'error', message: error.message });
+      setToast({ type: 'error', message: t(error.message) });
       throw error;
     }
   }
@@ -119,11 +132,16 @@ export default function App() {
       setToast({
         type: 'success',
         message: result.findingCount === 0
-          ? `Análisis completado: ${result.dependencyCount} dependencias revisadas, sin coincidencias.`
-          : `Análisis completado: ${result.findingCount} hallazgos en ${result.dependencyCount} dependencias.`,
+          ? t('Análisis completado: {dependencyCount} dependencias revisadas, sin coincidencias.', {
+            dependencyCount: result.dependencyCount,
+          })
+          : t('Análisis completado: {findingCount} hallazgos en {dependencyCount} dependencias.', {
+            findingCount: result.findingCount,
+            dependencyCount: result.dependencyCount,
+          }),
       });
     } catch (error) {
-      setToast({ type: 'error', message: error.message });
+      setToast({ type: 'error', message: t(error.message) });
     } finally {
       setAnalyzing(false);
     }
@@ -139,11 +157,11 @@ export default function App() {
     onSelectAlert: openAlert,
     onCreateProject: () => setCreateDialogOpen(true),
     onAddDependency: (projectId, dependency) =>
-      runMutation(() => addDependency(projectId, dependency), 'Dependencia añadida a la vigilancia.'),
+      runMutation(() => addDependency(projectId, dependency), t('Dependencia añadida a la vigilancia.')),
     onRemoveDependency: (projectId, dependencyId) =>
-      runMutation(() => removeDependency(projectId, dependencyId), 'Dependencia eliminada de la vigilancia.'),
+      runMutation(() => removeDependency(projectId, dependencyId), t('Dependencia eliminada de la vigilancia.')),
     onDeleteProject: (projectId) =>
-      runMutation(() => deleteProject(projectId), 'Proyecto eliminado.'),
+      runMutation(() => deleteProject(projectId), t('Proyecto eliminado.')),
   };
 
   const Page = pageComponents[page] ?? Dashboard;
@@ -153,7 +171,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <a className="skip-link" href="#main-content">Saltar al contenido</a>
+      <a className="skip-link" href="#main-content">{t('Saltar al contenido')}</a>
       <Sidebar
         activePage={page === 'alert-detail' ? 'alerts' : page}
         onNavigate={navigateToPage}
@@ -177,17 +195,24 @@ export default function App() {
           {loadError && (
             <div className="connection-error" role="alert">
               <Icon name="alert" size={18} />
-              <div><strong>No podemos leer los datos de Flaw.</strong><span>{loadError}</span></div>
+              <div><strong>{t('No podemos leer los datos de Flaw.')}</strong><span>{t(loadError)}</span></div>
               <button className="button button-quiet" type="button" onClick={() => refreshWorkspace().catch(() => {})} disabled={refreshing}>
                 Reintentar
               </button>
             </div>
           )}
 
+          {translationWarning && !loading && (
+            <div className="translation-warning" role="status">
+              <Icon name="alert" size={17} />
+              <span>{t(translationWarning)}</span>
+            </div>
+          )}
+
           {loading ? (
             <div className="loading-state" role="status" aria-live="polite">
               <span className="loading-mark"><Icon name="code" size={22} /></span>
-              <span>Conectando con tu stack…</span>
+              <span>{t('Cargando y traduciendo los avisos de seguridad…')}</span>
             </div>
           ) : page === 'alert-detail' ? (
             <AlertDetail alert={selectedAlert} onBack={backToAlerts} />
@@ -199,7 +224,7 @@ export default function App() {
             <div className={`toast toast-${toast.type}`} role={toast.type === 'error' ? 'alert' : 'status'} aria-live="polite">
               <Icon name={toast.type === 'error' ? 'alert' : 'check'} size={16} />
               <span>{toast.message}</span>
-              <button type="button" onClick={() => setToast(null)} aria-label="Cerrar notificación">
+              <button type="button" onClick={() => setToast(null)} aria-label={t('Cerrar notificación')}>
                 <Icon name="close" size={15} />
               </button>
             </div>
@@ -210,7 +235,7 @@ export default function App() {
       {createDialogOpen && (
         <CreateProjectDialog
           onClose={() => setCreateDialogOpen(false)}
-          onCreate={(project) => runMutation(() => createProject(project), 'Proyecto creado. Ya puedes añadir dependencias.')}
+          onCreate={(project) => runMutation(() => createProject(project), t('Proyecto creado. Ya puedes añadir dependencias.'))}
         />
       )}
     </div>

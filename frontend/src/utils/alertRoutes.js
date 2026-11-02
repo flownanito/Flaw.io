@@ -30,7 +30,7 @@ export function parseAppRoute(hash) {
     }
   }
 
-  const page = ['overview', 'projects', 'vulnerabilities', 'alerts'].includes(segments[0])
+  const page = ['overview', 'projects', 'vulnerabilities', 'alerts', 'settings'].includes(segments[0])
     ? segments[0]
     : 'overview';
   return { page, alertKey: null };

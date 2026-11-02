@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import Icon from '../Icon/Icon.jsx';
+import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import './CreateProjectDialog.css';
 
 export default function CreateProjectDialog({ onClose, onCreate }) {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [repositoryUrl, setRepositoryUrl] = useState('');
@@ -28,7 +30,7 @@ export default function CreateProjectDialog({ onClose, onCreate }) {
       await onCreate({ name, description, repositoryUrl });
       onClose();
     } catch (requestError) {
-      setError(requestError.message);
+      setError(t(requestError.message));
     } finally {
       setSaving(false);
     }
@@ -46,16 +48,16 @@ export default function CreateProjectDialog({ onClose, onCreate }) {
       >
         <div className="dialog-heading">
           <div>
-            <div className="eyebrow"><span className="eyebrow-mark" />PRIMER PASO</div>
-            <h2 id="create-project-title">Añade un proyecto.</h2>
+            <div className="eyebrow"><span className="eyebrow-mark" />{t('PRIMER PASO')}</div>
+            <h2 id="create-project-title">{t('Añade un proyecto.')}</h2>
           </div>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar diálogo">
+          <button className="icon-button" type="button" onClick={onClose} aria-label={t('Cerrar diálogo')}>
             <Icon name="close" />
           </button>
         </div>
-        <p className="dialog-intro">Empieza por el repositorio. Después podrás añadir las dependencias que quieres vigilar.</p>
+        <p className="dialog-intro">{t('Empieza por el repositorio. Después podrás añadir las dependencias que quieres vigilar.')}</p>
         <form onSubmit={submit}>
-          <label htmlFor="project-name">Nombre del proyecto <span>*</span></label>
+          <label htmlFor="project-name">{t('Nombre del proyecto')} <span>*</span></label>
           <input
             autoFocus
             id="project-name"
@@ -63,18 +65,18 @@ export default function CreateProjectDialog({ onClose, onCreate }) {
             onChange={(event) => setName(event.target.value)}
             required
             maxLength={100}
-            placeholder="p. ej. api-gateway"
+            placeholder={t('p. ej. api-gateway')}
           />
-          <label htmlFor="project-description">Descripción <span className="optional-label">OPCIONAL</span></label>
+          <label htmlFor="project-description">{t('Descripción')} <span className="optional-label">{t('OPCIONAL')}</span></label>
           <textarea
             id="project-description"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             maxLength={500}
             rows={3}
-            placeholder="¿Qué hace este proyecto?"
+            placeholder={t('¿Qué hace este proyecto?')}
           />
-          <label htmlFor="project-repository">URL del repositorio <span className="optional-label">OPCIONAL</span></label>
+          <label htmlFor="project-repository">{t('URL del repositorio')} <span className="optional-label">{t('OPCIONAL')}</span></label>
           <input
             id="project-repository"
             type="url"
@@ -85,9 +87,9 @@ export default function CreateProjectDialog({ onClose, onCreate }) {
           />
           {error && <p className="form-error" role="alert">{error}</p>}
           <div className="dialog-actions">
-            <button className="button button-quiet" type="button" onClick={onClose}>Cancelar</button>
+            <button className="button button-quiet" type="button" onClick={onClose}>{t('Cancelar')}</button>
             <button className="button button-primary" type="submit" disabled={saving}>
-              {saving ? 'Creando…' : <><Icon name="plus" size={15} /> Crear proyecto</>}
+                {saving ? t('Creando…') : <><Icon name="plus" size={15} /> {t('Crear proyecto')}</>}
             </button>
           </div>
         </form>

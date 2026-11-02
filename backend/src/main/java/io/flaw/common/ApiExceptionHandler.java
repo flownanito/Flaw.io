@@ -3,6 +3,7 @@ package io.flaw.common;
 import java.time.Instant;
 import java.util.Map;
 import java.util.stream.Collectors;
+import io.flaw.translation.service.DeepLTranslationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,11 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ExternalServiceException.class)
     public ResponseEntity<Map<String, Object>> handleExternalService(ExternalServiceException exception) {
         return error(HttpStatus.BAD_GATEWAY, exception.getMessage());
+    }
+
+    @ExceptionHandler(DeepLTranslationException.class)
+    public ResponseEntity<Map<String, Object>> handleTranslationUnavailable(DeepLTranslationException exception) {
+        return error(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage());
     }
 
     private ResponseEntity<Map<String, Object>> error(HttpStatus status, String message) {

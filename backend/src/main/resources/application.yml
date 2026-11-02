@@ -25,3 +25,7 @@ flaw:
     allowed-origins: ${FRONTEND_ORIGINS:${FRONTEND_ORIGIN:http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173}}
   osv:
     base-url: ${OSV_BASE_URL:https://api.osv.dev}
+  translation:
+    deepl:
+      api-key: ${DEEPL_AUTH_KEY:}
+      base-url: ${DEEPL_API_URL:https://api-free.deepl.com}
